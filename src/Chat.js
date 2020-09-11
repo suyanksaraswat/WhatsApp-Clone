@@ -4,12 +4,16 @@ import { Avatar, IconButton } from '@material-ui/core';
 import { Mic as MicIcon, InsertEmoticon as InsertEmoticonIcon, AttachFile, SearchOutlined, MoreVert as MoreVertIcon } from '@material-ui/icons';
 import { useParams } from 'react-router-dom';
 import db from './firebase';
+import { useStateValue } from './StateProvider';
+import firebase from 'firebase';
 
 function Chat() {
 	const [seed, setSeed] = useState('');
 	const [input, setInput] = useState('');
 	const { roomId } = useParams();
 	const [roomName, setRoomName] = useState('');
+	const [messages, setMessages] = useState([]);
+	const [{user}, dispatch] = useStateValue();
 
 	useEffect(() => {
 		if (roomId) {
@@ -17,6 +21,9 @@ function Chat() {
 				onSnapshot(snapshot => (
 					setRoomName(snapshot.data().name)	
 				))
+			db.collection('rooms').doc(roomId).collection('messages').orderBy('timestamp', 'asc').onSnapshot(snapshot => (
+				setMessages(snapshot.docs.map(doc => doc.data()))
+			))
 		}	
 	}, [roomId])
 
@@ -25,7 +32,13 @@ function Chat() {
 	}, [roomId])
 
 	const sendMessage = (e) => {
-		e.prevent.default();
+		e.preventDefault();
+		console.log(user.displayName);
+		db.collection('rooms').doc(roomId).collection('messages').add({
+			message: input,
+			name: user.displayName,
+			timestamp: firebase.firestore.FieldValue.serverTimeStamp(),
+		})
 
 		setInput('');
 	};
@@ -52,11 +65,13 @@ function Chat() {
 				</div>
 			</div>
 			<div className='chat__body'>
+				{messages.map(message => (
 				<p className={`chat__message ${true && "chat__reciever"}`}>
-					<span className='chat__name'>Suyank Saraswat</span>
-					Hew guys!
-					<span className='chat__timestamp'>02:43PM</span>
+					<span className='chat__name'>{message.name}</span>
+					{message.message}
+					<span className='chat__timestamp'>{new Date(message.timestamp?.toDate()).toUTCString()}</span>
 				</p>
+				))}
 			</div>
 			<div className='chat__footer'>
 				<InsertEmoticonIcon />
