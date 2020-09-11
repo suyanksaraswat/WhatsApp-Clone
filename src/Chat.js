@@ -37,7 +37,7 @@ function Chat() {
 		db.collection('rooms').doc(roomId).collection('messages').add({
 			message: input,
 			name: user.displayName,
-			timestamp: firebase.firestore.FieldValue.serverTimeStamp(),
+			timestamp: firebase.firestore.FieldValue.serverTimestamp(),
 		})
 
 		setInput('');
@@ -69,7 +69,6 @@ function Chat() {
 				<p className={`chat__message ${true && "chat__reciever"}`}>
 					<span className='chat__name'>{message.name}</span>
 					{message.message}
-					<span className='chat__timestamp'>{new Date(message.timestamp?.toDate()).toUTCString()}</span>
 				</p>
 				))}
 			</div>
